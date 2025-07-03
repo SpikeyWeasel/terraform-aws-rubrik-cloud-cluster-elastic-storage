@@ -1,6 +1,19 @@
+<!-- markdownlint-disable  MD033 -->
 # Quick Start: Rubrik AWS Cloud Cluster Elastic Storage Deployment Terraform Module
 
 Completing the steps detailed below will require that Terraform is installed and in your environment path, that you are running the instance from a \*nix shell (bash, zsh, etc), and that your machine is allowed HTTPS access through the AWS Security Group, and any Network ACLs, into the instances provisioned.
+
+## Security Considerations
+
+To use this module you will need the AWS IAM permissions detailed in [Required IAM Permissions][module-iam-policy].
+
+However some Cloud Security teams are reluctant to give such liberal permissions, specifically the IAM related permissions. To allow this module to be used in these circumstances then there are two options available:
+
+- Supply a permissions boundary policy ARN using the `aws_cloud_cluster_iam_permission_boundary` variable that is applied to the IAM role created by this module.
+- Alternatively request your Cloud Security team to create an AWS IAM instance profile with the policy outlined in [Instance Profile Policy][instance-profile-policy] (or [Immutable Instance Profile Policy][instance-profile-policy-immutable] if immutable buckets are to be used). The instance policy examples require the `<BUCKET_NAME>` placeholder to be replaced with either the value supplied for `s3_bucket_name` or "`cluster_name`.bucket-do-not-delete".
+The profile name is then passed to the module with the `aws_cloud_cluster_ec2_instance_profile_name` and with `set aws_cloud_cluster_ec2_instance_profile_precreated` set to `true`. This will eliminate the need for the module to require the IAM permissions listed.
+
+> __NOTE__ The IAM policy required to run the module should be tailored to meet your individual least privilege policy requirements. However the instance profile policies should be used exactly as per the examples for the cluster to function correctly.
 
 ## Configuration
 
@@ -12,7 +25,7 @@ module "rubrik_aws_cloud_cluster_elastic_storage" {
 
   aws_region                  = "us-west-1"
   aws_subnet_id               = "subnet-1234567890abcdefg"
-  aws_ami_filter              = ["rubrik-mp-cc-7*"]
+  aws_ami_filter              = ["rubrik-mp-cc-9*"]
   cluster_name                = "rubrik-cloud-cluster"
   admin_email                 = "build@rubrik.com"
   admin_password              = "RubrikGoForward"
@@ -77,18 +90,19 @@ The following are the variables accepted by the module.
 
 ### Cloud Cluster ES Settings
 
-| Name                                            | Description                                                                                                           |  Type  | Default | Required |
-|-------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------| :----: |:-------:| :------: |
-| create_iam_role                                 | If true, create required IAM role, role policy, and instance profile needed for Cloud Cluster ES.                     |  bool  |  true   |    no    |
-| aws_cloud_cluster_iam_role_name                 | AWS IAM Role name for Cloud Cluster ES. If blank a name will be auto generated. Required if create_iam_role is false. | string |         |    no    |
-| aws_cloud_cluster_iam_role_policy_name          | AWS IAM Role policy name for Cloud Cluster ES if create_iam_role is true. If blank a name will be auto generated.     | string |         |    no    |
-| aws_cloud_cluster_ec2_instance_profile_name     | AWS EC2 Instance Profile name that links the IAM Role to Cloud Cluster ES. If blank a name will be auto generated.    | string |         |    no    |
-| create_s3_bucket                                | If true, create am S3 bucket for Cloud Cluster ES data storage.                                                       |  bool  |  true   |    no    |
-| s3_bucket_name                                  | Name of the S3 bucket to use with Cloud Cluster ES data storage. If blank a name will be auto generated.              | string |         |    no    |
-| s3_bucket_force_destroy                         | Indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error.            |  bool  |  false  |    no    |
-| enableImmutability                              | Enable immutability on the S3 objects that CCES uses. Default value is true.                                          |  bool  |  true   |    no    |
-| create_s3_vpc_endpoint                          | If true, create a VPC Endpoint and S3 Endpoint Service for Cloud Cluster ES.                                          |  bool  |  true   |    no    |
-| s3_vpc_endpoint_route_table_ids                 | Route table IDs for VPC Endpoint and S3 Endpoint Service.                                                             |  list  |         |    no    |
+| Name                                               | Description                                                                                                           |  Type  | Default | Required |
+|----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------| :----: |:-------:| :------: |
+| aws_cloud_cluster_iam_role_name                    | AWS IAM Role name for Cloud Cluster ES. If blank a name will be auto generated. Required if create_iam_role is false. | string |         |    no    |
+| aws_cloud_cluster_iam_role_policy_name             | AWS IAM Role policy name for Cloud Cluster ES if create_iam_role is true. If blank a name will be auto generated.     | string |         |    no    |
+| aws_cloud_cluster_ec2_instance_profile_name        | AWS EC2 Instance Profile name that links the IAM Role to Cloud Cluster ES. If blank a name will be auto generated.    | string |         |    no    |
+| aws_cloud_cluster_ec2_instance_profile_precreated  | Indicates whether the AWS EC2 Instance Profile name, if supplied, has already been created.                           | bool   |  false  |    no    |
+| aws_cloud_cluster_iam_permission_boundary          | ARN of the IAM policy to be used as the permissions boundary for the Cloud Cluster ES IAM role                        | string |         |    no    |
+| create_s3_bucket                                   | If true, create am S3 bucket for Cloud Cluster ES data storage.                                                       |  bool   |  true   |    no    |
+| s3_bucket_name                                     | Name of the S3 bucket to use with Cloud Cluster ES data storage. If blank a name will be auto generated.              | string |         |    no    |
+| s3_bucket_force_destroy                            | Indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error.            |  bool   |  false  |    no    |
+| enable_immutability                                | Enable immutability on the S3 objects that CCES uses. Default value is true.                                          |  bool   |  true   |    no    |
+| create_s3_vpc_endpoint                             | If true, create a VPC Endpoint and S3 Endpoint Service for Cloud Cluster ES.                                          |  bool   |  true   |    no    |
+| s3_vpc_endpoint_route_table_ids                    | Route table IDs for VPC Endpoint and S3 Endpoint Service.                                                             |  list   |         |    no    |
 
 ### Bootstrap Settings
 
@@ -121,7 +135,7 @@ This section outlines what is required to run the configuration defined above.
 - [Rubrik RSC Provider for Terraform](https://github.com/rubrikinc/terraform-provider-polaris) - provides Terraform functions for Rubrik
   - Only required to run the sample Rubrik Bootstrap command
 - The Rubik Cloud Cluster product in the AWS Marketplace must be subscribed to. Otherwise, an error like this will be displayed:
-  > Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit https://aws.amazon.com/marketplace/pp?sku=<sku_number>
+  > Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit <https://aws.amazon.com/marketplace/pp?sku=><sku_number>
 
     If this occurs, open the specific link from the error, while logged into the AWS account where Cloud Cluster will be deployed. Follow the instructions for subscribing to the product.
 
@@ -220,7 +234,7 @@ To select a specific image to deploy replace the `aws_image_id` variable with th
 
 Where <X> is the major version of Rubrik CDM (ex. `rubrik-mp-cc-7*`)
 
-Example: 
+Example:
 
 ```none
 aws ec2 describe-images \
@@ -243,7 +257,8 @@ aws ec2 describe-images \
 |  2022-05-26T19:08:31.000Z|  ami-04d6af7c6f6629ce1  |  Rubrik OS rubrik-7-0-2-15510     |
 +--------------------------+-------------------------+-----------------------------------+
 ```
-For AWS Gov cloud change the `owner-id` to `345084742485`. 
+
+For AWS Gov cloud change the `owner-id` to `345084742485`.
 
 Example:
 
@@ -273,10 +288,10 @@ aws ec2 describe-images \
 
 There are a few known issues when using this Terraform module. These are described below.
 
- ### Deploying Cloud Cluster from the AWS Marketplace requires subscription
+### Deploying Cloud Cluster from the AWS Marketplace requires subscription
 
 The Rubik product in the AWS Marketplace must be subscribed to. Otherwise an error like this will be displayed:
-> Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit https://aws.amazon.com/marketplace/pp?sku=<sku_number>
+> Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit <https://aws.amazon.com/marketplace/pp?sku=><sku_number>
 
 If this occurs, open the specific link from the error, while logged into the AWS account where Cloud Cluster will be deployed. Follow the instructions for subscribing to the product.
 For AWS GovCloud the link points to the public marketplace. Instead of following the link, launch one instance of the major version of Rubrik from the AWS console. This will accept the terms and subscribe to the subscription. Remove the manually launched instance and then run the Terraform again.
@@ -285,13 +300,13 @@ For AWS GovCloud the link points to the public marketplace. Instead of following
 
 The AWS Instance Metadata Service Version 2 (IMDSv2) is not supported at this time with CCES v8.1.2 and older. This problem manifests itself after deploying the CCES node. SSH to the node fails to login and bootstrapping the node fails. When trying to ssh to the node the following error may occur:
 
-```
+```text
 admin@<node_ip_address>: Permission denied (publickey).
 ```
 
 When trying to bootstrap the cluster the following error may occur in Terraform:
 
-```
+```text
 rubrik_bootstrap_cces_aws.bootstrap_rubrik_cces_aws: Creating...
 ╷
 │ Error: Error with cluster configuration parameters :  Error Failed to check cloud storage connectivity:
@@ -317,7 +332,7 @@ rubrik_bootstrap_cces_aws.bootstrap_rubrik_cces_aws: Creating...
 Checking the bootstrap status using the REST API endpoint with a command such as `curl -X GET "https://<node_ip_address>/api/internal/cluster/me/bootstrap" -H "accept: application/json"` gives the error:
 
 ```json
-
+{
   "status": "FAILURE",
   "message": "Error with cluster configuration parameters :  Error Failed to check cloud storage connectivity:\n/0:0:0:0:0:0:0:1:\nGENERIC Excepshun (InternalErrorCode(NullInternalErrorCode,)): \"Check failed: \\\"\\\" != FLAGS_region ( vs. ) \"}\n*** Check failure stack trace: ***\n    @     0x7f55c52601c3  google::LogMessage::Fail()\n    @     0x7f55c526525b  google::LogMessage::SendToLog()\n    @     0x7f55c525febf  google::LogMessage::Flush()\n    @     0x7f55c52606ef  google::LogMessageFatal::~LogMessageFatal()\n    @     0x561bcdefac81  GetSpec()\n    @     0x561bcdeeb241  main\n    @     0x7f55c4a74083  __libc_start_main\n    @     0x561bcdef667e  _start in performBootstrap",
   "ipConfig": "NOT_STARTED",
@@ -337,3 +352,7 @@ Checking the bootstrap status using the REST API endpoint with a command such as
 ```
 
 If any of these errors occur, the Instance Metadata Service Version 2 (IMDSv2) may be enabled. This can happen if the option `aws_instance_imdsv2` is set to `true` in this module.  To fix this set the `aws_instance_imdsv2` variable to false or upgrade to CCES v8.1.3 and CCES v9.0 or higher.
+
+[instance-profile-policy]: ./instance-profile-policy.json
+[instance-profile-policy-immutable]: ./instance-profile-policy-immutable.json
+[module-iam-policy]: ./iam_policy.json

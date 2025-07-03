@@ -2,11 +2,13 @@
 # Dynamic Variable Creation #
 #############################
 locals {
-  cluster_node_names = formatlist("${var.cluster_name}-%02s", range(1, var.number_of_nodes + 1))
-  ami_id             = var.aws_image_id == "" || var.aws_image_id == "latest" ? data.aws_ami_ids.rubrik_cloud_cluster.ids[0] : var.aws_image_id
-  sg_ids             = var.aws_cloud_cluster_nodes_sg_ids == "" ? [module.rubrik_nodes_sg.security_group_id] : concat(var.aws_cloud_cluster_nodes_sg_ids, [module.rubrik_nodes_sg.security_group_id])
-  ebs_throughput     = (var.cluster_disk_type == "gp3" ? 250 : null)
-  aws_key_pair_name  = var.aws_key_pair_name == "" ? module.aws_key_pair.key_pair_name : var.aws_key_pair_name
+  cluster_node_names      = formatlist("${var.cluster_name}-%02s", range(1, var.number_of_nodes + 1))
+  ami_id                  = var.aws_image_id == "" || var.aws_image_id == "latest" ? data.aws_ami_ids.rubrik_cloud_cluster.ids[0] : var.aws_image_id
+  sg_ids                  = var.aws_cloud_cluster_nodes_sg_ids == "" ? [module.rubrik_nodes_sg.security_group_id] : concat(var.aws_cloud_cluster_nodes_sg_ids, [module.rubrik_nodes_sg.security_group_id])
+  ebs_throughput          = (var.cluster_disk_type == "gp3" ? 250 : null)
+  aws_key_pair_name       = var.aws_key_pair_name == "" ? module.aws_key_pair.key_pair_name : var.aws_key_pair_name
+  create_instance_profile = var.aws_cloud_cluster_ec2_instance_profile_precreated && var.aws_cloud_cluster_ec2_instance_profile_name != "" ? [] : ["true"]
+
   cluster_node_config = {
     "instance_type"           = var.aws_instance_type,
     "ami_id"                  = local.ami_id,
@@ -154,8 +156,15 @@ module "rubrik_hosts_sg_rules" {
 ##############################
 # Create IAM Role and Policy #
 ##############################
+
+moved {
+  from = module.iam_role
+  to   = module.iam_role["true"]
+}
+
 module "iam_role" {
-  source = "./modules/iam_role"
+  source   = "./modules/iam_role"
+  for_each = toset(local.create_instance_profile)
 
   bucket_arn               = aws_s3_bucket.cces-s3-bucket.arn
   enable_immutability      = local.enable_immutability
@@ -191,7 +200,7 @@ resource "aws_s3_bucket" "cces-s3-bucket" {
   bucket              = var.s3_bucket_name == "" ? "${var.cluster_name}.bucket-do-not-delete" : var.s3_bucket_name
   force_destroy       = var.s3_bucket_force_destroy
   object_lock_enabled = local.enable_immutability
-  tags                = var.aws_tags
+  tags                = merge({ "name" : (var.s3_bucket_name == "" ? "${var.cluster_name}.bucket-do-not-delete" : var.s3_bucket_name) }, var.aws_tags)
 }
 
 resource "aws_s3_bucket_versioning" "cces-s3-bucket-versioning" {
