@@ -147,6 +147,15 @@ variable "aws_cloud_cluster_iam_permission_boundary" {
   default     = null
 }
 
+variable "aws_cloud_cluster_ec2_instance_profile_precreated" {
+  description = <<EOF
+    Indicates whether the AWS IAM instance profile specified already exists. If `true` then the `aws_cloud_cluster_ec2_instance_profile_name` must be specified. 
+    Valid values: true, false
+  EOF
+  type        = bool
+  default     = false
+}
+
 variable "s3_bucket_name" {
   description = "Name of the S3 bucket to use with Cloud Cluster ES data storage. If blank a name will be auto generated."
   type        = string
