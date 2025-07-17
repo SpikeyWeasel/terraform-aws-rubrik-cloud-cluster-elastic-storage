@@ -33,6 +33,8 @@ module "rubrik_aws_cloud_cluster" {
 * Update quick-start documentation with security considerations and guidance for using pre-created instance profiles.
 * Add `name` tag to S3 bucket resources for better resource identification.
 * Update AMI filter example in documentation from `rubrik-mp-cc-7*` to `rubrik-mp-cc-8*`.
+* Remove legacy provider region declaration
+* Remove `aws_region` variable and move to provider declaration
 
 ### v1.5.0
 * Change the default value of the `admin_password` module input variable to `RubrikGoForward`. The old default value
@@ -52,6 +54,38 @@ module "rubrik_aws_cloud_cluster" {
 * Reduce non-data disk throughput when using split disks to 125.
 
 ## Upgrading
+
+### v1.5.0 to v1.5.1
+1. Change the version of the module from `1.5.0` to `1.5.1`.
+2. Remove the `aws_region` variable from the module and move the `region` declaration to the `provider "aws"` block.
+```
+provider "aws" {
+  region = "us-west-1"
+}
+```
+Note: the following error will occur during plan if not performed:
+```log
+Error: Unsupported argument
+│ 
+│   on main.tf line X, in module "rubrik_aws_cloud_cluster":
+│    X:   aws_region = "us-west-1"
+│ 
+│ An argument named "aws_region" is not expected here.
+```
+3. Run `terraform init -upgrade`. The `-upgrade` command line option is required since the updated module requires a new
+   version of the RSC (polaris) Terraform provider.
+4. Run `terraform plan` and check the output carefully. The following output is expected:
+```log
+# module.iam_role will be moved to module.iam_role["true"]
+# (due to existing moved block)
+
+Plan: 0 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ secrets_manager_get_ssh_key_command = "aws secretsmanager get-secret-value --region us-west-1 ..." -> "aws secretsmanager get-secret-value --region us-west-1 ..."
+```
+   There should be no resources replaced or removed.
+4. Run `terraform apply`.
 
 ### v1.4.1 to v1.5.0
 1. Change the version of the module from `1.4.1` to `1.5.0`.
