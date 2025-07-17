@@ -28,10 +28,14 @@ The profile name is then passed to the module with the `aws_cloud_cluster_ec2_in
 In your [Terraform configuration](https://learn.hashicorp.com/terraform/getting-started/build#configuration) (`main.tf`) populate the following and update the variables to your specific environment:
 
 ```hcl
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-west-1"
+}
+
 module "rubrik_aws_cloud_cluster_elastic_storage" {
   source  = "rubrikinc/rubrik-cloud-cluster-elastic-storage/aws"
 
-  aws_region                  = "us-west-1"
   aws_subnet_id               = "subnet-1234567890abcdefg"
   aws_ami_filter              = ["rubrik-mp-cc-8*"]
   cluster_name                = "rubrik-cloud-cluster"
@@ -46,6 +50,8 @@ module "rubrik_aws_cloud_cluster_elastic_storage" {
 
 You may also add additional variables, such as `aws_instance_type`, to overwrite the default values.
 
+**Note:** This module requires you to configure the AWS provider in your calling configuration. The provider should be configured with the appropriate region and credentials for your AWS environment.
+
 ## Inputs
 
 The following are the variables accepted by the module.
@@ -54,7 +60,6 @@ The following are the variables accepted by the module.
 
 | Name                                            | Description                                                                                                              |  Type  |          Default           | Required |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | :----: | :------------------------: | :------: |
-| aws_region                                      | The region to deploy Rubrik Cloud Cluster nodes.                                                                         | string |                            |   yes    |
 | aws_instance_imdsv2                             | Enable support for IMDSv2 instances. Only supported with CCES v8.1.3 or CCES v9.0 and higher.                            |  bool  |           false            |    no    |
 | aws_instance_type                               | The type of instance to use as Rubrik Cloud Cluster nodes. CC-ES requires m5.4xlarge.                                    | string |         m5.4xlarge         |    no    |
 | aws_disable_api_termination                     | If true, enables EC2 Instance Termination Protection on the Rubrik Cloud Cluster nodes.                                  |  bool  |            true            |    no    |

@@ -3,10 +3,14 @@ This module deploys a new Rubrik Cloud Cluster Elastic Storage (CCES) in AWS.
 
 ## Usage
 ```hcl
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-west-1"
+}
+
 module "rubrik_aws_cloud_cluster" {
   source  = "rubrikinc/rubrik-cloud-cluster-elastic-storage/aws"
 
-  aws_region        = "us-west-1"
   aws_subnet_id     = "subnet-1234567890abcdefg"
   aws_ami_filter    = ["rubrik-mp-cc-7*"]
   cluster_name      = "rubrik-cloud-cluster"
@@ -151,7 +155,6 @@ welcome. Thank you in advance for all of your issues, pull requests, and comment
 | <a name="input_aws_instance_imdsv2"></a> [aws\_instance\_imdsv2](#input\_aws\_instance\_imdsv2) | Enable support for IMDSv2 instances. Only supported with CCES v8.1.3 or CCES v9.0 and higher. | `bool` | `false` | no |
 | <a name="input_aws_instance_type"></a> [aws\_instance\_type](#input\_aws\_instance\_type) | The type of instance to use as Rubrik Cloud Cluster nodes. CC-ES requires m5.4xlarge. | `string` | `"m5.4xlarge"` | no |
 | <a name="input_aws_key_pair_name"></a> [aws\_key\_pair\_name](#input\_aws\_key\_pair\_name) | Name for the AWS SSH Key-Pair being created or the existing AWS SSH Key-Pair being used. | `string` | `""` | no |
-| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | The region to deploy Rubrik Cloud Cluster nodes. | `string` | n/a | yes |
 | <a name="input_aws_subnet_id"></a> [aws\_subnet\_id](#input\_aws\_subnet\_id) | The VPC Subnet ID to launch Rubrik Cloud Cluster in. | `string` | n/a | yes |
 | <a name="input_aws_tags"></a> [aws\_tags](#input\_aws\_tags) | Tags to add to the AWS resources that this Terraform script creates, including the Rubrik cluster nodes. | `map(string)` | `{}` | no |
 | <a name="input_aws_vpc_cloud_cluster_hosts_sg_name"></a> [aws\_vpc\_cloud\_cluster\_hosts\_sg\_name](#input\_aws\_vpc\_cloud\_cluster\_hosts\_sg\_name) | The name of the security group to create for Rubrik Cloud Cluster to communicate with EC2 instances. | `string` | `"Rubrik Cloud Cluster Hosts"` | no |

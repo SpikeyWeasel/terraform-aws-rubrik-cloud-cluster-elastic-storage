@@ -51,6 +51,8 @@ locals {
   )
 }
 
+data "aws_region" "current" {}
+
 data "aws_subnet" "rubrik_cloud_cluster" {
   id = var.aws_subnet_id
 }

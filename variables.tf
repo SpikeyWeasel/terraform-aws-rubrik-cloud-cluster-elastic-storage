@@ -1,10 +1,5 @@
 # Instance/Node settings.
 
-variable "aws_region" {
-  description = "The region to deploy Rubrik Cloud Cluster nodes."
-  type        = string
-}
-
 variable "aws_instance_imdsv2" {
   description = "Enable support for IMDSv2 instances. Only supported with CCES v8.1.3 or CCES v9.0 and higher."
   type        = bool
