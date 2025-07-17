@@ -37,7 +37,7 @@ variable "aws_ami_owners" {
 }
 
 variable "aws_ami_filter" {
-  description = "Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-7*'"
+  description = "Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-8*'"
   type        = set(string)
 }
 

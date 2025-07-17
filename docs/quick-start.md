@@ -251,24 +251,44 @@ Example:
 
 ```bash
 aws ec2 describe-images \
-     --filters 'Name=owner-id,Values=679593333241' 'Name=name,Values=rubrik-mp-cc-7*' \
+     --filters 'Name=owner-id,Values=679593333241' 'Name=name,Values=rubrik-mp-cc-8*' \
      --query 'sort_by(Images, &CreationDate)[*].{"Create Date":CreationDate, "Image ID":ImageId, Version:Description}' \
       --region 'us-west-2' \
      --output table
 
-------------------------------------------------------------------------------------------
-|                                     DescribeImages                                     |
-+--------------------------+-------------------------+-----------------------------------+
-|        Create Date       |        Image ID         |              Version              |
-+--------------------------+-------------------------+-----------------------------------+
-|  2022-02-04T21:49:48.000Z|  ami-0056ddcc69df6fb5c  |  Rubrik OS rubrik-7-0-0-14764     |
-|  2022-04-01T00:13:58.000Z|  ami-026233b876a279622  |  Rubrik OS rubrik-7-0-1-15183     |
-|  2022-04-12T04:50:31.000Z|  ami-03d68b150241012ec  |  Rubrik OS rubrik-7-0-1-p1-15197  |
-|  2022-04-27T05:56:27.000Z|  ami-09a3baba1545aa5f7  |  Rubrik OS rubrik-7-0-1-p2-15336  |
-|  2022-05-13T21:51:54.000Z|  ami-0af1ff3ee7517fefa  |  Rubrik OS rubrik-7-0-1-p3-15425  |
-|  2022-05-20T00:01:55.000Z|  ami-0cc1db55e45f3109b  |  Rubrik OS rubrik-7-0-1-p4-15453  |
-|  2022-05-26T19:08:31.000Z|  ami-04d6af7c6f6629ce1  |  Rubrik OS rubrik-7-0-2-15510     |
-+--------------------------+-------------------------+-----------------------------------+
+-------------------------------------------------------------------------------------------
+|                                     DescribeImages                                      |
++--------------------------+-------------------------+------------------------------------+
+|        Create Date       |        Image ID         |              Version               |
++--------------------------+-------------------------+------------------------------------+
+|  2023-08-01T03:51:42.000Z|  ami-067a772923ed7ae42  |  Rubrik OS rubrik-8-0-3-p7-22941   |
+|  2023-08-01T03:51:43.000Z|  ami-0a923aa5a73b43b07  |  Rubrik OS rubrik-8-1-2-p2-24758   |
+|  2023-08-17T17:20:00.000Z|  ami-0b682ec0d8be45f12  |  Rubrik OS rubrik-8-1-3-24772      |
+|  2023-08-25T22:58:55.000Z|  ami-0b4257592e8411404  |  Rubrik OS rubrik-8-1-3-p1-24838   |
+|  2023-08-31T20:22:17.000Z|  ami-01abb97252b6c4558  |  Rubrik OS rubrik-8-0-3-p9-22986   |
+|  2023-09-23T00:01:38.000Z|  ami-09be5daf9a3cc64fc  |  Rubrik OS rubrik-8-0-3-p10-23002  |
+|  2023-09-23T00:01:46.000Z|  ami-04d7caeafb447ed2e  |  Rubrik OS rubrik-8-1-3-p2-24912   |
+|  2023-10-05T05:45:43.000Z|  ami-023dc23b2e51fdf43  |  Rubrik OS rubrik-8-0-3-p11-23020  |
+|  2023-10-05T05:46:50.000Z|  ami-04e8e666d492d928e  |  Rubrik OS rubrik-8-1-3-p3-24955   |
+|  2023-10-26T21:36:15.000Z|  ami-07c748ac94aa02ac5  |  Rubrik OS rubrik-8-1-3-p4-25026   |
+|  2023-11-01T19:14:44.000Z|  ami-097d4b1ee571e3b90  |  Rubrik OS rubrik-8-0-3-p12-23046  |
+|  2023-11-22T00:15:10.000Z|  ami-01c55f34d5012033f  |  Rubrik OS rubrik-8-0-3-p13-23073  |
+|  2023-11-22T00:15:11.000Z|  ami-0b0d8c098a3515def  |  Rubrik OS rubrik-8-1-3-p5-25104   |
+|  2023-12-16T00:31:38.000Z|  ami-0e308b84bcc743473  |  Rubrik OS rubrik-8-0-3-p14-23094  |
+|  2023-12-21T19:54:33.000Z|  ami-0f1c616525ba03323  |  Rubrik OS rubrik-8-1-3-p6-25199   |
+|  2024-01-12T00:36:30.000Z|  ami-02438d1336629d0dc  |  Rubrik OS rubrik-8-0-3-p15-23110  |
+|  2024-02-02T02:05:34.000Z|  ami-0d60b767d6f011525  |  Rubrik OS rubrik-8-1-3-p7-25298   |
+|  2024-03-05T08:50:35.000Z|  ami-0bcd805fbbcacd4b2  |  Rubrik OS rubrik-8-1-3-p8-25376   |
+|  2024-03-29T15:18:16.000Z|  ami-0f305dc10a76b8553  |  Rubrik OS rubrik-8-1-3-p9-25413   |
+|  2024-05-11T02:13:09.000Z|  ami-03c071f37547cd672  |  Rubrik OS rubrik-8-1-3-p10-25441  |
+|  2024-05-23T18:20:53.000Z|  ami-0815e8be35e1a042f  |  Rubrik OS rubrik-8-1-3-p11-25483  |
+|  2024-06-12T23:25:19.000Z|  ami-078d4359ebe4fdcb8  |  Rubrik OS rubrik-8-1-3-p12-25506  |
+|  2024-07-03T05:32:07.000Z|  ami-0dbecd498404d7941  |  Rubrik OS rubrik-8-1-3-p13-25544  |
+|  2024-07-26T23:07:26.000Z|  ami-06cba747bf460959a  |  Rubrik OS rubrik-8-1-3-p14-25570  |
+|  2024-09-04T00:53:01.000Z|  ami-065ea2a074aff651c  |  Rubrik OS rubrik-8-1-3-p15-25607  |
+|  2024-11-05T14:27:13.000Z|  ami-06e537a3af3d5f19a  |  Rubrik OS rubrik-8-1-3-p16-25670  |
+|  2025-01-29T21:17:37.000Z|  ami-0803e67a19b1cd9d8  |  Rubrik OS rubrik-8-1-3-p17-25752  |
++--------------------------+-------------------------+------------------------------------+
 ```
 
 For AWS Gov cloud change the `owner-id` to `345084742485`.
@@ -277,24 +297,44 @@ Example:
 
 ```bash
 aws ec2 describe-images \
-    --filters 'Name=owner-id,Values=345084742485' 'Name=name,Values=rubrik-mp-cc-7*' \
+    --filters 'Name=owner-id,Values=345084742485' 'Name=name,Values=rubrik-mp-cc-8*' \
     --query 'sort_by(Images, &CreationDate)[*].{"Create Date":CreationDate, "Image ID":ImageId, Version:Description}' \
     --region 'us-gov-west-1' \
     --output table
 
-------------------------------------------------------------------------------------------
-|                                     DescribeImages                                     |
-+--------------------------+-------------------------+-----------------------------------+
-|        Create Date       |        Image ID         |              Version              |
-+--------------------------+-------------------------+-----------------------------------+
-|  2022-01-27T09:17:44.000Z|  ami-038cb33e356dfdb84  |  Rubrik OS rubrik-7-0-0-14706     |
-|  2022-02-05T20:14:25.000Z|  ami-09c62e5a399fc5526  |  Rubrik OS rubrik-7-0-0-14764     |
-|  2022-04-01T22:44:52.000Z|  ami-0852636d1bb4376a9  |  Rubrik OS rubrik-7-0-1-15183     |
-|  2022-04-13T03:06:33.000Z|  ami-0e77ba2b8cdeb645c  |  Rubrik OS rubrik-7-0-1-p1-15197  |
-|  2022-04-28T04:54:07.000Z|  ami-0486bfdcbf4ee6d5e  |  Rubrik OS rubrik-7-0-1-p2-15336  |
-|  2022-05-14T19:53:12.000Z|  ami-0b519a90ae467950d  |  Rubrik OS rubrik-7-0-1-p3-15425  |
-|  2022-05-20T23:18:12.000Z|  ami-060706f9a9462b5e7  |  Rubrik OS rubrik-7-0-1-p4-15453  |
-+--------------------------+-------------------------+-----------------------------------+
+-------------------------------------------------------------------------------------------
+|                                     DescribeImages                                      |
++--------------------------+-------------------------+------------------------------------+
+|        Create Date       |        Image ID         |              Version               |
++--------------------------+-------------------------+------------------------------------+
+|  2023-08-01T03:51:42.000Z|  ami-067a772923ed7ae42  |  Rubrik OS rubrik-8-0-3-p7-22941   |
+|  2023-08-01T03:51:43.000Z|  ami-0a923aa5a73b43b07  |  Rubrik OS rubrik-8-1-2-p2-24758   |
+|  2023-08-17T17:20:00.000Z|  ami-0b682ec0d8be45f12  |  Rubrik OS rubrik-8-1-3-24772      |
+|  2023-08-25T22:58:55.000Z|  ami-0b4257592e8411404  |  Rubrik OS rubrik-8-1-3-p1-24838   |
+|  2023-08-31T20:22:17.000Z|  ami-01abb97252b6c4558  |  Rubrik OS rubrik-8-0-3-p9-22986   |
+|  2023-09-23T00:01:38.000Z|  ami-09be5daf9a3cc64fc  |  Rubrik OS rubrik-8-0-3-p10-23002  |
+|  2023-09-23T00:01:46.000Z|  ami-04d7caeafb447ed2e  |  Rubrik OS rubrik-8-1-3-p2-24912   |
+|  2023-10-05T05:45:43.000Z|  ami-023dc23b2e51fdf43  |  Rubrik OS rubrik-8-0-3-p11-23020  |
+|  2023-10-05T05:46:50.000Z|  ami-04e8e666d492d928e  |  Rubrik OS rubrik-8-1-3-p3-24955   |
+|  2023-10-26T21:36:15.000Z|  ami-07c748ac94aa02ac5  |  Rubrik OS rubrik-8-1-3-p4-25026   |
+|  2023-11-01T19:14:44.000Z|  ami-097d4b1ee571e3b90  |  Rubrik OS rubrik-8-0-3-p12-23046  |
+|  2023-11-22T00:15:10.000Z|  ami-01c55f34d5012033f  |  Rubrik OS rubrik-8-0-3-p13-23073  |
+|  2023-11-22T00:15:11.000Z|  ami-0b0d8c098a3515def  |  Rubrik OS rubrik-8-1-3-p5-25104   |
+|  2023-12-16T00:31:38.000Z|  ami-0e308b84bcc743473  |  Rubrik OS rubrik-8-0-3-p14-23094  |
+|  2023-12-21T19:54:33.000Z|  ami-0f1c616525ba03323  |  Rubrik OS rubrik-8-1-3-p6-25199   |
+|  2024-01-12T00:36:30.000Z|  ami-02438d1336629d0dc  |  Rubrik OS rubrik-8-0-3-p15-23110  |
+|  2024-02-02T02:05:34.000Z|  ami-0d60b767d6f011525  |  Rubrik OS rubrik-8-1-3-p7-25298   |
+|  2024-03-05T08:50:35.000Z|  ami-0bcd805fbbcacd4b2  |  Rubrik OS rubrik-8-1-3-p8-25376   |
+|  2024-03-29T15:18:16.000Z|  ami-0f305dc10a76b8553  |  Rubrik OS rubrik-8-1-3-p9-25413   |
+|  2024-05-11T02:13:09.000Z|  ami-03c071f37547cd672  |  Rubrik OS rubrik-8-1-3-p10-25441  |
+|  2024-05-23T18:20:53.000Z|  ami-0815e8be35e1a042f  |  Rubrik OS rubrik-8-1-3-p11-25483  |
+|  2024-06-12T23:25:19.000Z|  ami-078d4359ebe4fdcb8  |  Rubrik OS rubrik-8-1-3-p12-25506  |
+|  2024-07-03T05:32:07.000Z|  ami-0dbecd498404d7941  |  Rubrik OS rubrik-8-1-3-p13-25544  |
+|  2024-07-26T23:07:26.000Z|  ami-06cba747bf460959a  |  Rubrik OS rubrik-8-1-3-p14-25570  |
+|  2024-09-04T00:53:01.000Z|  ami-065ea2a074aff651c  |  Rubrik OS rubrik-8-1-3-p15-25607  |
+|  2024-11-05T14:27:13.000Z|  ami-06e537a3af3d5f19a  |  Rubrik OS rubrik-8-1-3-p16-25670  |
+|  2025-01-29T21:17:37.000Z|  ami-0803e67a19b1cd9d8  |  Rubrik OS rubrik-8-1-3-p17-25752  |
++--------------------------+-------------------------+------------------------------------+
 ```
 
 ## Known issues

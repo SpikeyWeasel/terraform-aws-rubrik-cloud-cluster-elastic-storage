@@ -12,7 +12,7 @@ module "rubrik_aws_cloud_cluster" {
   source  = "rubrikinc/rubrik-cloud-cluster-elastic-storage/aws"
 
   aws_subnet_id     = "subnet-1234567890abcdefg"
-  aws_ami_filter    = ["rubrik-mp-cc-7*"]
+  aws_ami_filter    = ["rubrik-mp-cc-8*"]
   cluster_name      = "rubrik-cloud-cluster"
   admin_email       = "build@rubrik.com"
   admin_password    = "RubrikGoForward"
@@ -176,7 +176,7 @@ welcome. Thank you in advance for all of your issues, pull requests, and comment
 |------|-------------|------|---------|:--------:|
 | <a name="input_admin_email"></a> [admin\_email](#input\_admin\_email) | The Rubrik Cloud Cluster sends messages for the admin account to this email address. | `string` | n/a | yes |
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | Password for the Rubrik Cloud Cluster admin account. | `string` | `"RubrikGoForward"` | no |
-| <a name="input_aws_ami_filter"></a> [aws\_ami\_filter](#input\_aws\_ami\_filter) | Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-7*' | `set(string)` | n/a | yes |
+| <a name="input_aws_ami_filter"></a> [aws\_ami\_filter](#input\_aws\_ami\_filter) | Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-8*' | `set(string)` | n/a | yes |
 | <a name="input_aws_ami_owners"></a> [aws\_ami\_owners](#input\_aws\_ami\_owners) | AWS marketplace account(s) that owns the Rubrik Cloud Cluster AMIs. Use use 679593333241 for AWS Commercial and 345084742485 for AWS GovCloud. | `set(string)` | <pre>[<br/>  "679593333241"<br/>]</pre> | no |
 | <a name="input_aws_cloud_cluster_ec2_instance_profile_name"></a> [aws\_cloud\_cluster\_ec2\_instance\_profile\_name](#input\_aws\_cloud\_cluster\_ec2\_instance\_profile\_name) | AWS EC2 Instance Profile name that links the IAM Role to Cloud Cluster ES. If blank a name will be auto generated. | `string` | `""` | no |
 | <a name="input_aws_cloud_cluster_iam_managed_policies"></a> [aws\_cloud\_cluster\_iam\_managed\_policies](#input\_aws\_cloud\_cluster\_iam\_managed\_policies) | Set of IAM managed policy ARNs to attach to the Cloud Cluster ES IAM role. | `set(string)` | `null` | no |
