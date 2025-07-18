@@ -3,12 +3,16 @@ This module deploys a new Rubrik Cloud Cluster Elastic Storage (CCES) in AWS.
 
 ## Usage
 ```hcl
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-west-1"
+}
+
 module "rubrik_aws_cloud_cluster" {
   source  = "rubrikinc/rubrik-cloud-cluster-elastic-storage/aws"
 
-  aws_region        = "us-west-1"
   aws_subnet_id     = "subnet-1234567890abcdefg"
-  aws_ami_filter    = ["rubrik-mp-cc-7*"]
+  aws_ami_filter    = ["rubrik-mp-cc-8*"]
   cluster_name      = "rubrik-cloud-cluster"
   admin_email       = "build@rubrik.com"
   admin_password    = "RubrikGoForward"
@@ -20,6 +24,17 @@ module "rubrik_aws_cloud_cluster" {
 ```
 
 ## Changelog
+
+### v1.5.1
+* Add support for using a pre-created AWS IAM instance profile with the `aws_cloud_cluster_ec2_instance_profile_precreated` variable. This allows organizations with strict IAM policies to create the instance profile separately and reference it in the module.
+* Add comprehensive IAM policy documentation including:
+  * Required IAM permissions for the module in `docs/iam_policy.json`
+  * Instance profile policy links to official Rubrik documentation
+* Update quick-start documentation with security considerations and guidance for using pre-created instance profiles.
+* Add `name` tag to S3 bucket resources for better resource identification.
+* Update AMI filter example in documentation from `rubrik-mp-cc-7*` to `rubrik-mp-cc-8*`.
+* Remove legacy provider region declaration
+* Remove `aws_region` variable and move to provider declaration
 
 ### v1.5.0
 * Change the default value of the `admin_password` module input variable to `RubrikGoForward`. The old default value
@@ -39,6 +54,38 @@ module "rubrik_aws_cloud_cluster" {
 * Reduce non-data disk throughput when using split disks to 125.
 
 ## Upgrading
+
+### v1.5.0 to v1.5.1
+1. Change the version of the module from `1.5.0` to `1.5.1`.
+2. Remove the `aws_region` variable from the module and move the `region` declaration to the `provider "aws"` block.
+```
+provider "aws" {
+  region = "us-west-1"
+}
+```
+Note: the following error will occur during plan if not performed:
+```log
+Error: Unsupported argument
+│ 
+│   on main.tf line X, in module "rubrik_aws_cloud_cluster":
+│    X:   aws_region = "us-west-1"
+│ 
+│ An argument named "aws_region" is not expected here.
+```
+3. Run `terraform init -upgrade`. The `-upgrade` command line option is required since the updated module requires a new
+   version of the RSC (polaris) Terraform provider.
+4. Run `terraform plan` and check the output carefully. The following output is expected:
+```log
+# module.iam_role will be moved to module.iam_role["true"]
+# (due to existing moved block)
+
+Plan: 0 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ secrets_manager_get_ssh_key_command = "aws secretsmanager get-secret-value --region us-west-1 ..." -> "aws secretsmanager get-secret-value --region us-west-1 ..."
+```
+   There should be no resources replaced or removed.
+4. Run `terraform apply`.
 
 ### v1.4.1 to v1.5.0
 1. Change the version of the module from `1.4.1` to `1.5.0`.
@@ -129,7 +176,7 @@ welcome. Thank you in advance for all of your issues, pull requests, and comment
 |------|-------------|------|---------|:--------:|
 | <a name="input_admin_email"></a> [admin\_email](#input\_admin\_email) | The Rubrik Cloud Cluster sends messages for the admin account to this email address. | `string` | n/a | yes |
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | Password for the Rubrik Cloud Cluster admin account. | `string` | `"RubrikGoForward"` | no |
-| <a name="input_aws_ami_filter"></a> [aws\_ami\_filter](#input\_aws\_ami\_filter) | Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-7*' | `set(string)` | n/a | yes |
+| <a name="input_aws_ami_filter"></a> [aws\_ami\_filter](#input\_aws\_ami\_filter) | Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-8*' | `set(string)` | n/a | yes |
 | <a name="input_aws_ami_owners"></a> [aws\_ami\_owners](#input\_aws\_ami\_owners) | AWS marketplace account(s) that owns the Rubrik Cloud Cluster AMIs. Use use 679593333241 for AWS Commercial and 345084742485 for AWS GovCloud. | `set(string)` | <pre>[<br/>  "679593333241"<br/>]</pre> | no |
 | <a name="input_aws_cloud_cluster_ec2_instance_profile_name"></a> [aws\_cloud\_cluster\_ec2\_instance\_profile\_name](#input\_aws\_cloud\_cluster\_ec2\_instance\_profile\_name) | AWS EC2 Instance Profile name that links the IAM Role to Cloud Cluster ES. If blank a name will be auto generated. | `string` | `""` | no |
 | <a name="input_aws_cloud_cluster_iam_managed_policies"></a> [aws\_cloud\_cluster\_iam\_managed\_policies](#input\_aws\_cloud\_cluster\_iam\_managed\_policies) | Set of IAM managed policy ARNs to attach to the Cloud Cluster ES IAM role. | `set(string)` | `null` | no |
@@ -142,7 +189,6 @@ welcome. Thank you in advance for all of your issues, pull requests, and comment
 | <a name="input_aws_instance_imdsv2"></a> [aws\_instance\_imdsv2](#input\_aws\_instance\_imdsv2) | Enable support for IMDSv2 instances. Only supported with CCES v8.1.3 or CCES v9.0 and higher. | `bool` | `false` | no |
 | <a name="input_aws_instance_type"></a> [aws\_instance\_type](#input\_aws\_instance\_type) | The type of instance to use as Rubrik Cloud Cluster nodes. CC-ES requires m5.4xlarge. | `string` | `"m5.4xlarge"` | no |
 | <a name="input_aws_key_pair_name"></a> [aws\_key\_pair\_name](#input\_aws\_key\_pair\_name) | Name for the AWS SSH Key-Pair being created or the existing AWS SSH Key-Pair being used. | `string` | `""` | no |
-| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | The region to deploy Rubrik Cloud Cluster nodes. | `string` | n/a | yes |
 | <a name="input_aws_subnet_id"></a> [aws\_subnet\_id](#input\_aws\_subnet\_id) | The VPC Subnet ID to launch Rubrik Cloud Cluster in. | `string` | n/a | yes |
 | <a name="input_aws_tags"></a> [aws\_tags](#input\_aws\_tags) | Tags to add to the AWS resources that this Terraform script creates, including the Rubrik cluster nodes. | `map(string)` | `{}` | no |
 | <a name="input_aws_vpc_cloud_cluster_hosts_sg_name"></a> [aws\_vpc\_cloud\_cluster\_hosts\_sg\_name](#input\_aws\_vpc\_cloud\_cluster\_hosts\_sg\_name) | The name of the security group to create for Rubrik Cloud Cluster to communicate with EC2 instances. | `string` | `"Rubrik Cloud Cluster Hosts"` | no |

@@ -2,17 +2,42 @@
 
 Completing the steps detailed below will require that Terraform is installed and in your environment path, that you are running the instance from a \*nix shell (bash, zsh, etc), and that your machine is allowed HTTPS access through the AWS Security Group, and any Network ACLs, into the instances provisioned.
 
+## Security Considerations
+
+To use this module you will need the AWS IAM permissions detailed in [Required IAM Permissions][module-iam-policy] - the latest permissions can be checked in the [Rubrik documentation](https://docs.rubrik.com/en-us/saas/saas/aws_req_perms_table_cc_es_deploying.html).
+
+Note: When using immutable S3 buckets, the following IAM permissions may be required on the resource `arn:aws:s3:::<bucket_name>`:
+```
+  "s3:GetBucketObjectLockConfiguration",
+  "s3:GetObjectLegalHold",
+  "s3:GetObjectRetention",
+  "s3:PutObjectLegalHold",
+  "s3:PutObjectRetention"
+```
+
+In environments where IAM permissions need to be more tightly controlled, this module offers flexible deployment options to accommodate different security requirements. There are two approaches available:
+
+- Supply a permissions boundary policy ARN using the `aws_cloud_cluster_iam_permission_boundary` variable that is applied to the IAM role created by this module.
+- Alternatively request your Cloud Security team to create an AWS IAM instance profile with the JSON policy outlined in [instance-profile-policy](https://docs.rubrik.com/en-us/saas/common/aws_cloud_cluster_prerequisites.html) (Note: depending on your KMS implementation, refer to the relevant JSON Policy). The instance policy examples require the `<bucket_name>` placeholder to be replaced with either the value supplied for `s3_bucket_name` or "`cluster_name`.bucket-do-not-delete".
+The profile name is then passed to the module with the `aws_cloud_cluster_ec2_instance_profile_name` and with `set aws_cloud_cluster_ec2_instance_profile_precreated` set to `true`. This will eliminate the need for the module to require the IAM permissions listed.
+
+> __NOTE__ The IAM policy required to run the module should be tailored to meet your individual least privilege policy requirements. However the instance profile policies should be used exactly as per the examples for the cluster to function correctly.
+
 ## Configuration
 
 In your [Terraform configuration](https://learn.hashicorp.com/terraform/getting-started/build#configuration) (`main.tf`) populate the following and update the variables to your specific environment:
 
 ```hcl
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-west-1"
+}
+
 module "rubrik_aws_cloud_cluster_elastic_storage" {
   source  = "rubrikinc/rubrik-cloud-cluster-elastic-storage/aws"
 
-  aws_region                  = "us-west-1"
   aws_subnet_id               = "subnet-1234567890abcdefg"
-  aws_ami_filter              = ["rubrik-mp-cc-7*"]
+  aws_ami_filter              = ["rubrik-mp-cc-8*"]
   cluster_name                = "rubrik-cloud-cluster"
   admin_email                 = "build@rubrik.com"
   admin_password              = "RubrikGoForward"
@@ -25,6 +50,8 @@ module "rubrik_aws_cloud_cluster_elastic_storage" {
 
 You may also add additional variables, such as `aws_instance_type`, to overwrite the default values.
 
+**Note:** This module requires you to configure the AWS provider in your calling configuration. The provider should be configured with the appropriate region and credentials for your AWS environment.
+
 ## Inputs
 
 The following are the variables accepted by the module.
@@ -33,7 +60,6 @@ The following are the variables accepted by the module.
 
 | Name                                            | Description                                                                                                              |  Type  |          Default           | Required |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | :----: | :------------------------: | :------: |
-| aws_region                                      | The region to deploy Rubrik Cloud Cluster nodes.                                                                         | string |                            |   yes    |
 | aws_instance_imdsv2                             | Enable support for IMDSv2 instances. Only supported with CCES v8.1.3 or CCES v9.0 and higher.                            |  bool  |           false            |    no    |
 | aws_instance_type                               | The type of instance to use as Rubrik Cloud Cluster nodes. CC-ES requires m5.4xlarge.                                    | string |         m5.4xlarge         |    no    |
 | aws_disable_api_termination                     | If true, enables EC2 Instance Termination Protection on the Rubrik Cloud Cluster nodes.                                  |  bool  |            true            |    no    |
@@ -77,18 +103,19 @@ The following are the variables accepted by the module.
 
 ### Cloud Cluster ES Settings
 
-| Name                                            | Description                                                                                                           |  Type  | Default | Required |
-|-------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------| :----: |:-------:| :------: |
-| create_iam_role                                 | If true, create required IAM role, role policy, and instance profile needed for Cloud Cluster ES.                     |  bool  |  true   |    no    |
-| aws_cloud_cluster_iam_role_name                 | AWS IAM Role name for Cloud Cluster ES. If blank a name will be auto generated. Required if create_iam_role is false. | string |         |    no    |
-| aws_cloud_cluster_iam_role_policy_name          | AWS IAM Role policy name for Cloud Cluster ES if create_iam_role is true. If blank a name will be auto generated.     | string |         |    no    |
-| aws_cloud_cluster_ec2_instance_profile_name     | AWS EC2 Instance Profile name that links the IAM Role to Cloud Cluster ES. If blank a name will be auto generated.    | string |         |    no    |
-| create_s3_bucket                                | If true, create am S3 bucket for Cloud Cluster ES data storage.                                                       |  bool  |  true   |    no    |
-| s3_bucket_name                                  | Name of the S3 bucket to use with Cloud Cluster ES data storage. If blank a name will be auto generated.              | string |         |    no    |
-| s3_bucket_force_destroy                         | Indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error.            |  bool  |  false  |    no    |
-| enableImmutability                              | Enable immutability on the S3 objects that CCES uses. Default value is true.                                          |  bool  |  true   |    no    |
-| create_s3_vpc_endpoint                          | If true, create a VPC Endpoint and S3 Endpoint Service for Cloud Cluster ES.                                          |  bool  |  true   |    no    |
-| s3_vpc_endpoint_route_table_ids                 | Route table IDs for VPC Endpoint and S3 Endpoint Service.                                                             |  list  |         |    no    |
+| Name                                               | Description                                                                                                           |  Type  | Default | Required |
+|----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------| :----: |:-------:| :------: |
+| aws_cloud_cluster_iam_role_name                    | AWS IAM Role name for Cloud Cluster ES. If blank a name will be auto generated. Required if create_iam_role is false. | string |         |    no    |
+| aws_cloud_cluster_iam_role_policy_name             | AWS IAM Role policy name for Cloud Cluster ES if create_iam_role is true. If blank a name will be auto generated.     | string |         |    no    |
+| aws_cloud_cluster_ec2_instance_profile_name        | AWS EC2 Instance Profile name that links the IAM Role to Cloud Cluster ES. If blank a name will be auto generated.    | string |         |    no    |
+| aws_cloud_cluster_ec2_instance_profile_precreated  | Indicates whether the AWS EC2 Instance Profile name, if supplied, has already been created.                           | bool   |  false  |    no    |
+| aws_cloud_cluster_iam_permission_boundary          | ARN of the IAM policy to be used as the permissions boundary for the Cloud Cluster ES IAM role                        | string |         |    no    |
+| create_s3_bucket                                   | If true, create am S3 bucket for Cloud Cluster ES data storage.                                                       |  bool  |  true   |    no    |
+| s3_bucket_name                                     | Name of the S3 bucket to use with Cloud Cluster ES data storage. If blank a name will be auto generated.              | string |         |    no    |
+| s3_bucket_force_destroy                            | Indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error.            |  bool  |  false  |    no    |
+| enable_immutability                                | Enable immutability on the S3 objects that CCES uses. Default value is true.                                          |  bool  |  true   |    no    |
+| create_s3_vpc_endpoint                             | If true, create a VPC Endpoint and S3 Endpoint Service for Cloud Cluster ES.                                          |  bool  |  true   |    no    |
+| s3_vpc_endpoint_route_table_ids                    | Route table IDs for VPC Endpoint and S3 Endpoint Service.                                                             |  list  |         |    no    |
 
 ### Bootstrap Settings
 
@@ -121,7 +148,7 @@ This section outlines what is required to run the configuration defined above.
 - [Rubrik RSC Provider for Terraform](https://github.com/rubrikinc/terraform-provider-polaris) - provides Terraform functions for Rubrik
   - Only required to run the sample Rubrik Bootstrap command
 - The Rubik Cloud Cluster product in the AWS Marketplace must be subscribed to. Otherwise, an error like this will be displayed:
-  > Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit https://aws.amazon.com/marketplace/pp?sku=<sku_number>
+  > Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit `https://aws.amazon.com/marketplace/pp?sku=<sku_number>`
 
     If this occurs, open the specific link from the error, while logged into the AWS account where Cloud Cluster will be deployed. Follow the instructions for subscribing to the product.
 
@@ -129,7 +156,7 @@ This section outlines what is required to run the configuration defined above.
 
 The directory can be initialized for Terraform use by running the `terraform init` command:
 
-```none
+```log
 -> terraform init
 Initializing modules...
 Downloading registry.terraform.io/terraform-aws-modules/key-pair/aws 2.0.1 for aws_key_pair...
@@ -210,7 +237,7 @@ Once the Cloud Cluster is no longer required, it can be destroyed using the `ter
 
 To select a specific image to deploy replace the `aws_image_id` variable with the AMI ID of the Rubrik Marketplace Image to deploy. To find a list of the Rubrik Cloud Cluster images that are available in a specific region run the following `aws` cli command (requires that the AWS CLI be installed):
 
-```none
+```bash
   aws ec2 describe-images \
     --filters 'Name=owner-id,Values=679593333241' 'Name=name,Values=rubrik-mp-cc-<X>*' \
      --query 'sort_by(Images, &CreationDate)[*].{"Create Date":CreationDate, "Image ID":ImageId, Version:Description}' \
@@ -220,63 +247,104 @@ To select a specific image to deploy replace the `aws_image_id` variable with th
 
 Where <X> is the major version of Rubrik CDM (ex. `rubrik-mp-cc-7*`)
 
-Example: 
+Example:
 
-```none
+```bash
 aws ec2 describe-images \
-     --filters 'Name=owner-id,Values=679593333241' 'Name=name,Values=rubrik-mp-cc-7*' \
+     --filters 'Name=owner-id,Values=679593333241' 'Name=name,Values=rubrik-mp-cc-8*' \
      --query 'sort_by(Images, &CreationDate)[*].{"Create Date":CreationDate, "Image ID":ImageId, Version:Description}' \
       --region 'us-west-2' \
      --output table
 
-------------------------------------------------------------------------------------------
-|                                     DescribeImages                                     |
-+--------------------------+-------------------------+-----------------------------------+
-|        Create Date       |        Image ID         |              Version              |
-+--------------------------+-------------------------+-----------------------------------+
-|  2022-02-04T21:49:48.000Z|  ami-0056ddcc69df6fb5c  |  Rubrik OS rubrik-7-0-0-14764     |
-|  2022-04-01T00:13:58.000Z|  ami-026233b876a279622  |  Rubrik OS rubrik-7-0-1-15183     |
-|  2022-04-12T04:50:31.000Z|  ami-03d68b150241012ec  |  Rubrik OS rubrik-7-0-1-p1-15197  |
-|  2022-04-27T05:56:27.000Z|  ami-09a3baba1545aa5f7  |  Rubrik OS rubrik-7-0-1-p2-15336  |
-|  2022-05-13T21:51:54.000Z|  ami-0af1ff3ee7517fefa  |  Rubrik OS rubrik-7-0-1-p3-15425  |
-|  2022-05-20T00:01:55.000Z|  ami-0cc1db55e45f3109b  |  Rubrik OS rubrik-7-0-1-p4-15453  |
-|  2022-05-26T19:08:31.000Z|  ami-04d6af7c6f6629ce1  |  Rubrik OS rubrik-7-0-2-15510     |
-+--------------------------+-------------------------+-----------------------------------+
+-------------------------------------------------------------------------------------------
+|                                     DescribeImages                                      |
++--------------------------+-------------------------+------------------------------------+
+|        Create Date       |        Image ID         |              Version               |
++--------------------------+-------------------------+------------------------------------+
+|  2023-08-01T03:51:42.000Z|  ami-067a772923ed7ae42  |  Rubrik OS rubrik-8-0-3-p7-22941   |
+|  2023-08-01T03:51:43.000Z|  ami-0a923aa5a73b43b07  |  Rubrik OS rubrik-8-1-2-p2-24758   |
+|  2023-08-17T17:20:00.000Z|  ami-0b682ec0d8be45f12  |  Rubrik OS rubrik-8-1-3-24772      |
+|  2023-08-25T22:58:55.000Z|  ami-0b4257592e8411404  |  Rubrik OS rubrik-8-1-3-p1-24838   |
+|  2023-08-31T20:22:17.000Z|  ami-01abb97252b6c4558  |  Rubrik OS rubrik-8-0-3-p9-22986   |
+|  2023-09-23T00:01:38.000Z|  ami-09be5daf9a3cc64fc  |  Rubrik OS rubrik-8-0-3-p10-23002  |
+|  2023-09-23T00:01:46.000Z|  ami-04d7caeafb447ed2e  |  Rubrik OS rubrik-8-1-3-p2-24912   |
+|  2023-10-05T05:45:43.000Z|  ami-023dc23b2e51fdf43  |  Rubrik OS rubrik-8-0-3-p11-23020  |
+|  2023-10-05T05:46:50.000Z|  ami-04e8e666d492d928e  |  Rubrik OS rubrik-8-1-3-p3-24955   |
+|  2023-10-26T21:36:15.000Z|  ami-07c748ac94aa02ac5  |  Rubrik OS rubrik-8-1-3-p4-25026   |
+|  2023-11-01T19:14:44.000Z|  ami-097d4b1ee571e3b90  |  Rubrik OS rubrik-8-0-3-p12-23046  |
+|  2023-11-22T00:15:10.000Z|  ami-01c55f34d5012033f  |  Rubrik OS rubrik-8-0-3-p13-23073  |
+|  2023-11-22T00:15:11.000Z|  ami-0b0d8c098a3515def  |  Rubrik OS rubrik-8-1-3-p5-25104   |
+|  2023-12-16T00:31:38.000Z|  ami-0e308b84bcc743473  |  Rubrik OS rubrik-8-0-3-p14-23094  |
+|  2023-12-21T19:54:33.000Z|  ami-0f1c616525ba03323  |  Rubrik OS rubrik-8-1-3-p6-25199   |
+|  2024-01-12T00:36:30.000Z|  ami-02438d1336629d0dc  |  Rubrik OS rubrik-8-0-3-p15-23110  |
+|  2024-02-02T02:05:34.000Z|  ami-0d60b767d6f011525  |  Rubrik OS rubrik-8-1-3-p7-25298   |
+|  2024-03-05T08:50:35.000Z|  ami-0bcd805fbbcacd4b2  |  Rubrik OS rubrik-8-1-3-p8-25376   |
+|  2024-03-29T15:18:16.000Z|  ami-0f305dc10a76b8553  |  Rubrik OS rubrik-8-1-3-p9-25413   |
+|  2024-05-11T02:13:09.000Z|  ami-03c071f37547cd672  |  Rubrik OS rubrik-8-1-3-p10-25441  |
+|  2024-05-23T18:20:53.000Z|  ami-0815e8be35e1a042f  |  Rubrik OS rubrik-8-1-3-p11-25483  |
+|  2024-06-12T23:25:19.000Z|  ami-078d4359ebe4fdcb8  |  Rubrik OS rubrik-8-1-3-p12-25506  |
+|  2024-07-03T05:32:07.000Z|  ami-0dbecd498404d7941  |  Rubrik OS rubrik-8-1-3-p13-25544  |
+|  2024-07-26T23:07:26.000Z|  ami-06cba747bf460959a  |  Rubrik OS rubrik-8-1-3-p14-25570  |
+|  2024-09-04T00:53:01.000Z|  ami-065ea2a074aff651c  |  Rubrik OS rubrik-8-1-3-p15-25607  |
+|  2024-11-05T14:27:13.000Z|  ami-06e537a3af3d5f19a  |  Rubrik OS rubrik-8-1-3-p16-25670  |
+|  2025-01-29T21:17:37.000Z|  ami-0803e67a19b1cd9d8  |  Rubrik OS rubrik-8-1-3-p17-25752  |
++--------------------------+-------------------------+------------------------------------+
 ```
-For AWS Gov cloud change the `owner-id` to `345084742485`. 
+
+For AWS Gov cloud change the `owner-id` to `345084742485`.
 
 Example:
 
-```none
+```bash
 aws ec2 describe-images \
-    --filters 'Name=owner-id,Values=345084742485' 'Name=name,Values=rubrik-mp-cc-7*' \
+    --filters 'Name=owner-id,Values=345084742485' 'Name=name,Values=rubrik-mp-cc-8*' \
     --query 'sort_by(Images, &CreationDate)[*].{"Create Date":CreationDate, "Image ID":ImageId, Version:Description}' \
     --region 'us-gov-west-1' \
     --output table
 
-------------------------------------------------------------------------------------------
-|                                     DescribeImages                                     |
-+--------------------------+-------------------------+-----------------------------------+
-|        Create Date       |        Image ID         |              Version              |
-+--------------------------+-------------------------+-----------------------------------+
-|  2022-01-27T09:17:44.000Z|  ami-038cb33e356dfdb84  |  Rubrik OS rubrik-7-0-0-14706     |
-|  2022-02-05T20:14:25.000Z|  ami-09c62e5a399fc5526  |  Rubrik OS rubrik-7-0-0-14764     |
-|  2022-04-01T22:44:52.000Z|  ami-0852636d1bb4376a9  |  Rubrik OS rubrik-7-0-1-15183     |
-|  2022-04-13T03:06:33.000Z|  ami-0e77ba2b8cdeb645c  |  Rubrik OS rubrik-7-0-1-p1-15197  |
-|  2022-04-28T04:54:07.000Z|  ami-0486bfdcbf4ee6d5e  |  Rubrik OS rubrik-7-0-1-p2-15336  |
-|  2022-05-14T19:53:12.000Z|  ami-0b519a90ae467950d  |  Rubrik OS rubrik-7-0-1-p3-15425  |
-|  2022-05-20T23:18:12.000Z|  ami-060706f9a9462b5e7  |  Rubrik OS rubrik-7-0-1-p4-15453  |
-+--------------------------+-------------------------+-----------------------------------+
+-------------------------------------------------------------------------------------------
+|                                     DescribeImages                                      |
++--------------------------+-------------------------+------------------------------------+
+|        Create Date       |        Image ID         |              Version               |
++--------------------------+-------------------------+------------------------------------+
+|  2023-08-01T03:51:42.000Z|  ami-067a772923ed7ae42  |  Rubrik OS rubrik-8-0-3-p7-22941   |
+|  2023-08-01T03:51:43.000Z|  ami-0a923aa5a73b43b07  |  Rubrik OS rubrik-8-1-2-p2-24758   |
+|  2023-08-17T17:20:00.000Z|  ami-0b682ec0d8be45f12  |  Rubrik OS rubrik-8-1-3-24772      |
+|  2023-08-25T22:58:55.000Z|  ami-0b4257592e8411404  |  Rubrik OS rubrik-8-1-3-p1-24838   |
+|  2023-08-31T20:22:17.000Z|  ami-01abb97252b6c4558  |  Rubrik OS rubrik-8-0-3-p9-22986   |
+|  2023-09-23T00:01:38.000Z|  ami-09be5daf9a3cc64fc  |  Rubrik OS rubrik-8-0-3-p10-23002  |
+|  2023-09-23T00:01:46.000Z|  ami-04d7caeafb447ed2e  |  Rubrik OS rubrik-8-1-3-p2-24912   |
+|  2023-10-05T05:45:43.000Z|  ami-023dc23b2e51fdf43  |  Rubrik OS rubrik-8-0-3-p11-23020  |
+|  2023-10-05T05:46:50.000Z|  ami-04e8e666d492d928e  |  Rubrik OS rubrik-8-1-3-p3-24955   |
+|  2023-10-26T21:36:15.000Z|  ami-07c748ac94aa02ac5  |  Rubrik OS rubrik-8-1-3-p4-25026   |
+|  2023-11-01T19:14:44.000Z|  ami-097d4b1ee571e3b90  |  Rubrik OS rubrik-8-0-3-p12-23046  |
+|  2023-11-22T00:15:10.000Z|  ami-01c55f34d5012033f  |  Rubrik OS rubrik-8-0-3-p13-23073  |
+|  2023-11-22T00:15:11.000Z|  ami-0b0d8c098a3515def  |  Rubrik OS rubrik-8-1-3-p5-25104   |
+|  2023-12-16T00:31:38.000Z|  ami-0e308b84bcc743473  |  Rubrik OS rubrik-8-0-3-p14-23094  |
+|  2023-12-21T19:54:33.000Z|  ami-0f1c616525ba03323  |  Rubrik OS rubrik-8-1-3-p6-25199   |
+|  2024-01-12T00:36:30.000Z|  ami-02438d1336629d0dc  |  Rubrik OS rubrik-8-0-3-p15-23110  |
+|  2024-02-02T02:05:34.000Z|  ami-0d60b767d6f011525  |  Rubrik OS rubrik-8-1-3-p7-25298   |
+|  2024-03-05T08:50:35.000Z|  ami-0bcd805fbbcacd4b2  |  Rubrik OS rubrik-8-1-3-p8-25376   |
+|  2024-03-29T15:18:16.000Z|  ami-0f305dc10a76b8553  |  Rubrik OS rubrik-8-1-3-p9-25413   |
+|  2024-05-11T02:13:09.000Z|  ami-03c071f37547cd672  |  Rubrik OS rubrik-8-1-3-p10-25441  |
+|  2024-05-23T18:20:53.000Z|  ami-0815e8be35e1a042f  |  Rubrik OS rubrik-8-1-3-p11-25483  |
+|  2024-06-12T23:25:19.000Z|  ami-078d4359ebe4fdcb8  |  Rubrik OS rubrik-8-1-3-p12-25506  |
+|  2024-07-03T05:32:07.000Z|  ami-0dbecd498404d7941  |  Rubrik OS rubrik-8-1-3-p13-25544  |
+|  2024-07-26T23:07:26.000Z|  ami-06cba747bf460959a  |  Rubrik OS rubrik-8-1-3-p14-25570  |
+|  2024-09-04T00:53:01.000Z|  ami-065ea2a074aff651c  |  Rubrik OS rubrik-8-1-3-p15-25607  |
+|  2024-11-05T14:27:13.000Z|  ami-06e537a3af3d5f19a  |  Rubrik OS rubrik-8-1-3-p16-25670  |
+|  2025-01-29T21:17:37.000Z|  ami-0803e67a19b1cd9d8  |  Rubrik OS rubrik-8-1-3-p17-25752  |
++--------------------------+-------------------------+------------------------------------+
 ```
 
 ## Known issues
 
 There are a few known issues when using this Terraform module. These are described below.
 
- ### Deploying Cloud Cluster from the AWS Marketplace requires subscription
+### Deploying Cloud Cluster from the AWS Marketplace requires subscription
 
 The Rubik product in the AWS Marketplace must be subscribed to. Otherwise an error like this will be displayed:
-> Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit https://aws.amazon.com/marketplace/pp?sku=<sku_number>
+> Error: creating EC2 Instance: OptInRequired: In order to use this AWS Marketplace product you need to accept terms and subscribe. To do so please visit `https://aws.amazon.com/marketplace/pp?sku=<sku_number>`
 
 If this occurs, open the specific link from the error, while logged into the AWS account where Cloud Cluster will be deployed. Follow the instructions for subscribing to the product.
 For AWS GovCloud the link points to the public marketplace. Instead of following the link, launch one instance of the major version of Rubrik from the AWS console. This will accept the terms and subscribe to the subscription. Remove the manually launched instance and then run the Terraform again.
@@ -285,13 +353,13 @@ For AWS GovCloud the link points to the public marketplace. Instead of following
 
 The AWS Instance Metadata Service Version 2 (IMDSv2) is not supported at this time with CCES v8.1.2 and older. This problem manifests itself after deploying the CCES node. SSH to the node fails to login and bootstrapping the node fails. When trying to ssh to the node the following error may occur:
 
-```
+```bash
 admin@<node_ip_address>: Permission denied (publickey).
 ```
 
 When trying to bootstrap the cluster the following error may occur in Terraform:
 
-```
+```log
 rubrik_bootstrap_cces_aws.bootstrap_rubrik_cces_aws: Creating...
 ╷
 │ Error: Error with cluster configuration parameters :  Error Failed to check cloud storage connectivity:
@@ -317,7 +385,7 @@ rubrik_bootstrap_cces_aws.bootstrap_rubrik_cces_aws: Creating...
 Checking the bootstrap status using the REST API endpoint with a command such as `curl -X GET "https://<node_ip_address>/api/internal/cluster/me/bootstrap" -H "accept: application/json"` gives the error:
 
 ```json
-
+{
   "status": "FAILURE",
   "message": "Error with cluster configuration parameters :  Error Failed to check cloud storage connectivity:\n/0:0:0:0:0:0:0:1:\nGENERIC Excepshun (InternalErrorCode(NullInternalErrorCode,)): \"Check failed: \\\"\\\" != FLAGS_region ( vs. ) \"}\n*** Check failure stack trace: ***\n    @     0x7f55c52601c3  google::LogMessage::Fail()\n    @     0x7f55c526525b  google::LogMessage::SendToLog()\n    @     0x7f55c525febf  google::LogMessage::Flush()\n    @     0x7f55c52606ef  google::LogMessageFatal::~LogMessageFatal()\n    @     0x561bcdefac81  GetSpec()\n    @     0x561bcdeeb241  main\n    @     0x7f55c4a74083  __libc_start_main\n    @     0x561bcdef667e  _start in performBootstrap",
   "ipConfig": "NOT_STARTED",
@@ -337,3 +405,5 @@ Checking the bootstrap status using the REST API endpoint with a command such as
 ```
 
 If any of these errors occur, the Instance Metadata Service Version 2 (IMDSv2) may be enabled. This can happen if the option `aws_instance_imdsv2` is set to `true` in this module.  To fix this set the `aws_instance_imdsv2` variable to false or upgrade to CCES v8.1.3 and CCES v9.0 or higher.
+
+[module-iam-policy]: ./iam_policy.json

@@ -1,10 +1,5 @@
 # Instance/Node settings.
 
-variable "aws_region" {
-  description = "The region to deploy Rubrik Cloud Cluster nodes."
-  type        = string
-}
-
 variable "aws_instance_imdsv2" {
   description = "Enable support for IMDSv2 instances. Only supported with CCES v8.1.3 or CCES v9.0 and higher."
   type        = bool
@@ -42,7 +37,7 @@ variable "aws_ami_owners" {
 }
 
 variable "aws_ami_filter" {
-  description = "Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-7*'"
+  description = "Cloud Cluster AWS AMI name pattern(s) to search for. Use 'rubrik-mp-cc-<X>*' without the single quotes. Where <X> is the major version of CDM. Ex. 'rubrik-mp-cc-8*'"
   type        = set(string)
 }
 
@@ -145,6 +140,15 @@ variable "aws_cloud_cluster_iam_permission_boundary" {
   description = "ARN of the policy that is used to set the permissions boundary for the Cloud Cluster ES IAM role."
   type        = string
   default     = null
+}
+
+variable "aws_cloud_cluster_ec2_instance_profile_precreated" {
+  description = <<EOF
+    Indicates whether the AWS IAM instance profile specified already exists. If `true` then the `aws_cloud_cluster_ec2_instance_profile_name` must be specified. 
+    Valid values: true, false
+  EOF
+  type        = bool
+  default     = false
 }
 
 variable "s3_bucket_name" {

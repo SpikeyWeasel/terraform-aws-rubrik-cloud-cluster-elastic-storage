@@ -3,13 +3,9 @@ variable "bucket_arn" {
 }
 
 variable "enable_immutability" {
-  type    = bool
-  default = null
-
-  validation {
-    condition     = var.enable_immutability == null ? var.enableImmutability != null : true
-    error_message = "enable_immutability must be specified."
-  }
+  type        = bool
+  default     = null
+  description = "Enables object lock and versioning on the S3 bucket. Sets the object lock flag during bootstrap. Not supported on CDM v8.0.1 and earlier."
 }
 
 variable "instance_profile_name" {
