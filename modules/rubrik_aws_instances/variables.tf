@@ -16,6 +16,7 @@ variable "node_config" {
     root_volume_throughput = number
     tags = map(string)
     http_tokens = string
+    http_put_response_hop_limit = number
   })
 }
 

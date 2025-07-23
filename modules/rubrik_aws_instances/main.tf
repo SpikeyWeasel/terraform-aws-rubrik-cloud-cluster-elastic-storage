@@ -6,7 +6,8 @@ resource "aws_instance" "rubrik_cluster" {
   subnet_id = var.node_config.subnet_id
   key_name  = var.node_config.key_pair_name
   metadata_options {
-    http_tokens = var.node_config.http_tokens
+    http_tokens                 = var.node_config.http_tokens
+    http_put_response_hop_limit = var.node_config.http_put_response_hop_limit
   }  
   lifecycle {
     ignore_changes = [ami]
