@@ -1,0 +1,39 @@
+formatter: markdown
+
+sections:
+  hide:
+    - header
+    - footer
+
+content: |-
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+output:
+  file: README.md
+
+sort:
+  enabled: true
+  by: type
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: true
+  escape: true
+  html: true
+  indent: 2
+  required: true
+  sensitive: true
+  type: true
+

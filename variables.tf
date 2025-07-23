@@ -59,6 +59,12 @@ variable "private_key_recovery_window_in_days" {
   default     = 30
 }
 
+variable "metadata_http_put_response_hop_limit" {
+  description = "HTTP response hop limit if IMDSv2 is adopted in node instances."
+  type        = number
+  default     = 2
+}
+
 # Network settings.
 
 variable "aws_vpc_cloud_cluster_nodes_sg_name" {
